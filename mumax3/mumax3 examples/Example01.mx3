@@ -1,0 +1,57 @@
+// Material parameters
+Aex = 12e-12 // Exchange in J/m^3
+Msat = 1e6 //Saturation magnetisation in A/m
+Ku1 = 0.6e6 // Anisotropy in J/m^3
+AnisU = vector(0, 0, 1) //Uniaxial anisotropy direction 
+Dbulk = 0
+Dind = 2e-3 //Interfacial DMI in J/m^2
+
+// Damping
+alpha = 0.10000		 
+
+// Simulation mesh
+SetGridsize(256, 256, 1)
+SetCellsize(4e-9, 4e-9, 1e-9)
+
+// set external field and temp
+B_ext = vector(0, 0, 0)
+Temp = 0.0
+
+// choose solver
+SetSolver(5) 
+
+// random magnetisation with random seed
+m = RandomMagSeed(92238196)
+
+Snapshot(m)
+
+// ----------------------------
+
+// run for 10ns
+Run(1e-8)
+Snapshot(m)
+
+// ----------------------------
+
+// reset mag
+m = RandomMagSeed(92238196)
+// run until MaxTorque is small enough
+RunWhile(MaxTorque>5e-3)
+Snapshot(m)
+
+// ----------------------------
+
+// reset mag
+m = RandomMagSeed(92238196)
+// run until MaxTorque is small enough
+Relax()
+Snapshot(m)
+
+// ----------------------------
+
+// reset mag
+m = RandomMagSeed(92238196)
+// Stopping condition for minimizer
+MinimizerStop = 1e-3
+Minimize() 
+Snapshot(m)

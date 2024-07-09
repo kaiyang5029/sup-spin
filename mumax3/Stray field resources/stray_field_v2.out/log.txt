@@ -1,0 +1,108 @@
+//mumax 3.10 [windows_amd64 go1.11.6(gc) CUDA-11.0]
+//GPU info: NVIDIA GeForce RTX 3050 6GB Laptop GPU(6143MB), CUDA Driver 12.5, cc=8.6, using cc=80 PTX
+//(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
+//This is free software without any warranty. See license.txt
+//********************************************************************//
+//  If you use mumax in any work or publication,                      //
+//  we kindly ask you to cite the references in references.bib        //
+//********************************************************************//
+//output directory: .\stray_field_v2.out/
+num_sk_repeats := 2
+num_sk_layers_per_repeat := 1
+num_x_cells := 128
+num_sk_layers := num_sk_repeats * num_sk_layers_per_repeat
+num_total_layers := num_sk_layers * 5
+Region_sk_0 := 2
+Region_sk_1 := 3
+mu_0 := 4 * pi * 1e-7
+Aex_raw_sk := 12.0e-12
+Msat_raw_sk := 1.0e6
+Keff_raw_sk := 0
+Ku1_raw_sk := Keff_raw_sk + (mu_0/2)*Msat_raw_sk*Msat_raw_sk
+Dbulk_raw_sk := 0
+Dind_raw_sk := 1.8e-3
+alpha_sk := 0.05
+tFM_sk := 1.0e-9
+tHM_sk := 2.0e-9
+eff_med_scaling_sk := tFM_sk / (tFM_sk + tHM_sk)
+Aex_scaled_sk := Aex_raw_sk * eff_med_scaling_sk
+Msat_scaled_sk := Msat_raw_sk * eff_med_scaling_sk
+Keff_scaled_sk := Keff_raw_sk * eff_med_scaling_sk
+Ku1_scaled_sk := Keff_scaled_sk + (mu_0/2)*Msat_scaled_sk*Msat_scaled_sk
+Dbulk_scaled_sk := Dbulk_raw_sk * eff_med_scaling_sk
+Dind_scaled_sk := Dind_raw_sk * eff_med_scaling_sk
+print(sprintf("==> Msat_scaled_sk: %f, Keff_scaled_sk: %f, Ku1_scaled_sk: %f", Msat_scaled_sk, Keff_scaled_sk, Ku1_scaled_sk))
+//==> Msat_scaled_sk: 333333.333333, Keff_scaled_sk: 0.000000, Ku1_scaled_sk: 69813.170080
+Msat.SetRegion(0, 0)
+Aex.SetRegion(Region_sk_0, Aex_scaled_sk)
+Msat.SetRegion(Region_sk_0, Msat_scaled_sk)
+Ku1.SetRegion(Region_sk_0, Ku1_scaled_sk)
+AnisU.SetRegion(Region_sk_0, vector(0, 0, 1))
+Dbulk.SetRegion(Region_sk_0, Dbulk_scaled_sk)
+Dind.SetRegion(Region_sk_0, Dind_scaled_sk)
+alpha.SetRegion(Region_sk_0, alpha_sk)
+Aex.SetRegion(Region_sk_1, Aex_scaled_sk)
+Msat.SetRegion(Region_sk_1, Msat_scaled_sk)
+Ku1.SetRegion(Region_sk_1, Ku1_scaled_sk)
+AnisU.SetRegion(Region_sk_1, vector(0, 0, 1))
+Dbulk.SetRegion(Region_sk_1, Dbulk_scaled_sk)
+Dind.SetRegion(Region_sk_1, Dind_scaled_sk)
+alpha.SetRegion(Region_sk_1, alpha_sk)
+SetPBC(2, 2, 0)
+SetGridsize(num_x_cells, num_x_cells, num_total_layers)
+cellsizex := 4.0e-9
+cellsizey := 4.0e-9
+cellsizez := 3.0e-9
+SetCellsize(cellsizex, cellsizey, cellsizez)
+tmp_region_num := 0
+tmp_layer_num := 0
+print("==> Sk stack:")
+//==> Sk stack:
+for i := 0; i < num_sk_repeats; i += 1 {
+	for j := 0; j < num_sk_layers_per_repeat; j += 1 {
+		tmp_region_num = Mod(i, 2) + Region_sk_0
+		tmp_layer_num = j + i*num_sk_layers_per_repeat
+		defRegion(tmp_region_num, layer(tmp_layer_num))
+		print(sprintf("==>  Layer: %d, Region: %d", tmp_layer_num, tmp_region_num))
+	}
+}
+//==>  Layer: 0, Region: 2
+//==>  Layer: 1, Region: 3
+mu0HRKKY_Sk := 0.1
+J_val_Sk := mu0HRKKY_Sk * tFM_sk * Msat_raw_sk
+scaleExchange_sk := J_val_Sk * cellsizez / (2 * Aex_scaled_sk)
+ext_scaleExchange(Region_sk_0, Region_sk_1, scaleExchange_sk)
+MaxErr = 1e-4
+SetSolver(6)
+OutputFormat = OVF1_TEXT
+TableAdd(B_demag.region(0))
+TableAdd(m_full.region(0))
+m = Uniform(0, 0, 1)
+B_current := 0.0
+B_current_mT := 0.0
+t0 := 0.0
+ind := 0
+ind_start := 0
+filename := ""
+B_0 := 0.075
+Temp = 850
+B_ext = vector(0, 0, B_0)
+prt_str := sprintf("==> Current field: %f", B_0)
+print(prt_str)
+//==> Current field: 0.075000
+RunWhile(MaxTorque > 1e-2)
+FixDt = 10e-14
+Temp = 750
+Temp = 600
+Temp = 0
+B_current_mT = B_0 * 1e3
+filename = sprintf("m_%.0fmT", B_current_mT)
+saveas(m, filename)
+saveas(B_demag, sprintf("B_demag_%.0fmT", B_current_mT))
+//********************************************************************//
+//Please cite the following references, relevant for your simulation. //
+//See bibtex file in output folder for justification.                 //
+//********************************************************************//
+//   * Leliaert et al., AIP Adv. 7, 125010 (2017).
+//   * Vansteenkiste et al., AIP Adv. 4, 107133 (2014).
+//   * Mulkers et al., Phys. Rev. B 95, 144401 (2017).

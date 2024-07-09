@@ -1,0 +1,51 @@
+// Define the grid size and simulation domain
+SetGridsize(512, 512, 30) // Example grid size: 10x 3 layers
+SetCellsize(2e-9, 2e-9, 1e-9) // Each cell is 1 nm thick
+SetPBC(0,0,2)
+// Define material properties for each layer
+Msat.SetRegion(0, 0) // Ir
+Msat.SetRegion(1, 1e6) //FeCo
+Msat.SetRegion(2, 0) // Pt
+
+Aex.SetRegion(1, 1.3e-11) // Exchange in J/m
+Ku1.SetRegion(1, 5e5) // Anisotropy in J/m^3
+AnisU.SetRegion(1, vector(0, 0, 1)) //Uniaxial anisotropy direction 
+Dbulk.SetRegion(1, 0) // Not sure what constant to put here
+Dind.SetRegion(1, 2e-3) //Interfacial DMI in J/m^2
+alpha.SetRegion(1, 0.1) // zDamping
+
+// Define the layers in the stack
+num_layers := 10
+
+//i is the layer_number
+for i := 0; i < num_layers; i++ {
+	defRegion(0, layer(3*i))
+	defRegion(1, layer(3*i+1))
+	defRegion(2, layer(3*i+2))
+}
+// set external field and temp
+B_ext = vector(0, 0, 0.1) // External field (T)
+Temp = 5.5
+
+// choose solver
+SetSolver(5) 
+
+
+// Run the simulation
+
+m = RandomMagSeed(92238196)
+
+
+// put in some skyrmions
+sk_transl_pos := -400e-9
+sk_delta := 150e-9
+
+
+Relax()
+for layer_number:=0; layer_number<num_layers; layer_number+= 1 {
+	// layer0: region1, layer1: region0,...
+	Snapshot(CropLayer(m, 3*layer_number))
+	Snapshot(CropLayer(m, 3*layer_number+1))
+	Snapshot(CropLayer(m, 3*layer_number+2))
+}
+

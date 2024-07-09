@@ -1,0 +1,44 @@
+// Solution to homework problem
+
+// Material parameters
+Aex = 12e-12 // Exchange in J/m^3
+Msat = 1e6 //Saturation magnetisation in A/m
+Ku1 = 0.6e6 // Anisotropy in J/m^3
+AnisU = vector(0, 0, 1) //Uniaxial anisotropy direction 
+Dbulk = 0
+Dind = 2e-3 //Interfacial DMI in J/m^2
+
+// Damping
+alpha = 0.10000		 
+
+// Simulation mesh
+SetGridsize(256, 256, 1)
+SetCellsize(4e-9, 4e-9, 1e-9)
+
+// set external field and temp
+B_ext = vector(0, 0, 0)
+Temp = 0.0
+
+// choose solver
+SetSolver(5) 
+
+
+// ----------------------------
+
+m = Uniform(0, 0, 1) 
+
+sk_transl_pos := -450e-9
+sk_delta := 100e-9
+
+// put in some skyrmions
+for i:=0; i<10; i++{
+	for j:=0; j<10; j++{
+		m.setInShape(cylinder(50e-9, inf).transl(sk_transl_pos+sk_delta*i,sk_transl_pos+sk_delta*j,0), NeelSkyrmion(1,-1).scale(1,1,1).transl(sk_transl_pos+sk_delta*i,sk_transl_pos+sk_delta*j,0))
+	}
+}
+
+Snapshot(m)
+RunWhile(MaxTorque>5e-3)
+Snapshot(m)
+
+// ----------------------------

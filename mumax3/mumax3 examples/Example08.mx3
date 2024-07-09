@@ -1,0 +1,46 @@
+// Material parameters
+Aex = 12e-12 // Exchange in J/m^3
+Msat = 1e6 //Saturation magnetisation in A/m
+Ku1 = 0.6e6 // Anisotropy in J/m^3
+AnisU = vector(0, 0, 1) //Uniaxial anisotropy direction 
+Dbulk = 0
+Dind = 2e-3 //Interfacial DMI in J/m^2
+
+// Damping
+alpha = 0.10000		 
+
+// Simulation mesh
+SetGridsize(256, 256, 1)
+SetCellsize(4e-9, 4e-9, 1e-9)
+
+// set external field and temp
+B_ext = vector(0, 0, 0)
+Temp = 0.0
+
+// choose solver
+SetSolver(5) 
+
+// uniform mag
+m = RandomMagSeed(92238196)
+B_ext = vector(0, 0, 0.3)
+RunWhile(MaxTorque>5e-3)
+Snapshot(m)
+
+// low MaxTorque threshold to 
+B_current := 0.25
+B_ext = vector(0, 0, B_current)
+RunWhile(MaxTorque>5e-3)
+Snapshot(m)
+
+// Minimize to ensure that it has completely settled
+minimizerStop = 5e-5
+Minimize() 
+
+//RF_Applied
+fcritical := 50e9 // 50 GHz
+H0 := 10e-3
+
+B_ext = vector(0, H0*sin(2*pi*fcritical*t)/(2*pi*fcritical*t), B_current)
+tableautosave(10e-12)
+Run(10e-9)
+Snapshot(m)

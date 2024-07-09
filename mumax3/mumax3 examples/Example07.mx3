@@ -1,0 +1,96 @@
+// Material parameters
+Aex = 12e-12 // Exchange in J/m^3
+Msat = 1e6 //Saturation magnetisation in A/m
+Ku1 = 0.6e6 // Anisotropy in J/m^3
+AnisU = vector(0, 0, 1) //Uniaxial anisotropy direction 
+Dbulk = 0
+Dind = 2e-3 //Interfacial DMI in J/m^2
+
+// Damping
+alpha = 0.10000		 
+
+// Simulation mesh
+SetGridsize(256, 256, 1)
+SetCellsize(4e-9, 4e-9, 1e-9)
+
+// set external field and temp
+B_ext = vector(0, 0, 0)
+Temp = 750.0
+
+// choose solver
+SetSolver(5) 
+
+// quantities to save
+TableAdd(B_ext)
+TableAdd(E_Total)
+TableAdd(E_anis)
+TableAdd(E_demag)
+TableAdd(E_exch)
+TableAdd(E_Zeeman)
+TableAdd(ext_topologicalcharge)
+TableAdd(Temp)
+TableAdd(LastErr)
+OutputFormat = OVF1_TEXT
+
+m = Uniform(0, 0, 1)
+
+// B field range
+B_start := 0.25
+B_end := -0.35
+
+// sweep rate in Tesla/s
+// -1e6 => 1mT/ns => 5mT/5ns
+B_sweep_rate := -1e6
+// take steps in field, say 2mT
+B_step_size := -0.002
+// field total num of steps
+B_total_steps := Ceil((B_end-B_start)/B_step_size)+1
+
+// define some variables here. Note these are all floats
+B_current := 0.0
+B_current_mT := 0.0
+t0 := 0.0
+
+// sim time per step in s
+sim_run_time_per_step := B_step_size / B_sweep_rate
+const_field_run_time := 1e-9
+
+// set autosaves	
+// in 0.1 mT step. typical: 0.01ns
+tableautosave_time := 1e-5/Abs(B_sweep_rate)
+tableautosave(tableautosave_time)
+
+// print values to check
+prt_str := sprintf("==> B_total_steps: %f",B_total_steps)
+print(prt_str)
+prt_str = sprintf("==> sim_run_time_per_step: %e", sim_run_time_per_step)
+print(prt_str)
+
+// Big loop
+for ind := 0; ind < B_total_steps; ind++ {
+		
+	
+	// initial stablisation run at constant field
+	B_current = B_start + B_step_size*ind
+	B_ext = vector(0,0,B_current)
+	
+	// print values to check
+	prt_str = sprintf("==> B_current: %f. Running const_field_run_time",B_current)
+	print(prt_str)	
+	
+	Run(const_field_run_time)
+	
+	// output mag	
+	B_current_mT = B_current*1e3
+	saveas(m, sprintf("%04d_full_mag_%.0fmT", ind, B_current_mT) )
+	
+	// sweep to next field
+	t0 = t
+	B_ext = vector(0, 0, B_current + B_sweep_rate*(t-t0))
+	
+	// print values to check
+	prt_str = sprintf("==> B_current: %f. Sweeping to next field value",B_current)
+	print(prt_str)	
+	
+	Run(sim_run_time_per_step)
+}

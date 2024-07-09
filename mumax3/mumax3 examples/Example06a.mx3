@@ -1,0 +1,43 @@
+// Regions of material parameters
+// Region 0 - Spacer
+Msat.SetRegion(0, 0)
+
+// Region 1 - Magnetic layer
+Aex.SetRegion(1, 12e-12) // Exchange in J/m
+Msat.SetRegion(1, 1e6) //Saturation magnetisation in A/m
+Ku1.SetRegion(1, 1e6) // Anisotropy in J/m^3
+AnisU.SetRegion(1, vector(0, 0, 1)) //Uniaxial anisotropy direction 
+Dbulk.SetRegion(1, 0)
+Dind.SetRegion(1, 0) //Interfacial DMI in J/m^2
+alpha.SetRegion(1, 0.1) // zDamping
+
+num_layers := 5
+
+// Simulation mesh
+SetGridsize(256, 256, num_layers)
+SetCellsize(4e-9, 4e-9, 2e-9)
+
+// Set regions to layers
+for layer_number:=0; layer_number<num_layers; layer_number+= 1 {
+	// layer0: region1, layer1: region0,...
+	defRegion(Mod(layer_number+1, 2), layer(layer_number))
+}
+
+// set external field and temp
+B_ext = vector(0, 0, 0)
+Temp = 0.0
+
+// choose solver
+SetSolver(5) 
+
+// ----------------------------
+
+m = RandomMagSeed(92238196)
+m.SetRegion(0, Uniform(0, 0, 0))
+
+// run until MaxTorque is small enough
+RunWhile(MaxTorque>1e-2)
+for layer_number:=0; layer_number<num_layers; layer_number+= 1 {
+	// layer0: region1, layer1: region0,...
+	Snapshot(CropLayer(m, layer_number))
+}

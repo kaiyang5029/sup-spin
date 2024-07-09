@@ -1,0 +1,48 @@
+// Material parameters
+Aex = 12e-12 // Exchange in J/m^3
+Msat = 1e6 //Saturation magnetisation in A/m
+Ku1 = 0.6e6 // Anisotropy in J/m^3
+AnisU = vector(0, 0, 1) //Uniaxial anisotropy direction 
+Dbulk = 0
+Dind = 2e-3 //Interfacial DMI in J/m^2
+
+// Damping
+alpha = 0.05		 
+
+// Non-adiabaticity of spin-transfer-torque 
+xi = 0.2
+
+// Simulation mesh
+SetGridsize(256, 256, 1)
+SetCellsize(4e-9, 4e-9, 1e-9)
+
+// set external field and temp
+B_ext = vector(0, 0, 0)
+Temp = 0.0
+
+// choose solver
+SetSolver(5) 
+
+// ----------------------------
+
+Dind = -2e-3 //Interfacial DMI in J/m^2
+
+m = Uniform(0, 0, 1) 
+
+sk_transl_pos := -400e-9
+sk_delta := 150e-9
+
+// put in some skyrmions
+for i:=0; i<5; i++{
+	m.setInShape(cylinder(50e-9, inf).transl(sk_transl_pos+sk_delta*i,0,0), NeelSkyrmion(-1,-1).scale(1,1,1).transl(sk_transl_pos+sk_delta*i,0,0))
+}
+
+B_ext = vector(0, 0, 0.2)
+
+// Run with current through the sample
+j = vector(-1e12, 0, 0)
+
+AutoSnapshot(m, 0.5e-9)
+RunWhile(MaxTorque>5e-3)
+
+// ----------------------------

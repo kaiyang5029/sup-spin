@@ -1,0 +1,146 @@
+Aex_val:=1.200000e-11
+Msat_val:=1.360000e+06
+Ku1_val:=1.162104e+06
+Dind_val:=2.010000e-03
+num_layers:=4.000000e+00
+Coupling_val:=1.000000e-02
+B_start:=4.000000e-01
+B_end:=-4.000000e-01
+B_sweep_rate:=-1.000000e+06
+B_step_size:=-2.000000e-03
+Temp =6.000000e+02
+alpha_val := 5.000000e-02
+Nx := 512
+Ny := 512
+setpbc(4,4,2)
+// Regions of material parameters
+
+TableAdd(B_ext)
+TableAdd(E_Total)
+TableAdd(E_anis)
+TableAdd(E_demag)
+TableAdd(E_exch)
+TableAdd(E_Zeeman)
+TableAdd(ext_topologicalcharge)
+TableAdd(Temp)
+TableAdd(LastErr)
+
+mu_0 := 4*3.1415e-7
+Keff_val:=Ku1_val-(mu_0/2)*Msat_val*Msat_val
+Dbulk_val := 0                                   
+Rescale_parameter := 1.0/3.0
+
+
+
+Aex_val_ema := Rescale_parameter*Aex_val                              // Exchange in J/m
+Msat_val_ema := Rescale_parameter*Msat_val                             //Saturation magnetisation in A/m
+Keff_val_ema:= Rescale_parameter*Keff_val
+Ku1_val_ema := Keff_val_ema+(mu_0/2)*Msat_val_ema*Msat_val_ema                              // Anisotropy in J/m^3
+
+Dbulk_val_ema := Rescale_parameter*Dbulk_val                                   //Bulk DMI in J/m^2
+Dind_val_ema := Rescale_parameter*Dind_val                              //Interfacial DMI in J/m^2
+
+
+// Region 0 - Effective medium 1
+Aex.SetRegion(0, Aex_val_ema) // Exchange in J/m
+Msat.SetRegion(0, Msat_val_ema) //Saturation magnetisation in A/m
+Ku1.SetRegion(0, Ku1_val_ema) // Anisotropy in J/m^3
+AnisU.SetRegion(0, vector(0, 0, 1)) //Uniaxial anisotropy direction 
+Dbulk.SetRegion(0, Dbulk_val_ema)
+Dind.SetRegion(0, Dind_val_ema) //Interfacial DMI in J/m^2
+alpha.SetRegion(0, alpha_val) // zDamping
+
+// Region 1 - Effective medium 2
+Aex.SetRegion(1, Aex_val_ema) // Exchange in J/m^3
+Msat.SetRegion(1, Msat_val_ema) //Saturation magnetisation in A/m
+Ku1.SetRegion(1, Ku1_val_ema) // Anisotropy in J/m^3
+AnisU.SetRegion(1, vector(0, 0, 1)) //Uniaxial anisotropy direction 
+Dbulk.SetRegion(1, Dbulk_val_ema)
+Dind.SetRegion(1, Dind_val_ema) //Interfacial DMI in J/m^2
+alpha.SetRegion(1, alpha_val) // zDamping
+
+
+// Simulation mesh
+SetGridsize(Nx, Ny, num_layers)
+SetCellsize(2e-9, 2e-9, 1e-9)
+
+counting:= 0
+
+
+// Set regions to layers
+for layer_number:=0; layer_number<num_layers; layer_number+= 1 {
+	// layer0: region1, layer1: region0,...
+	defRegion(Mod(layer_number+1, 2), layer(layer_number))
+}
+
+// turn off direct interlayer exchange coupling
+ext_scaleExchange(0, 1, Coupling_val)	//(layerA,layerB,value)
+
+// set external field and temp
+B_ext = vector(0, 0, 0)
+
+// choose solver
+
+// ----------------------------
+
+m = Uniform(0,0,1)
+Maxerr = 0.0001
+
+
+
+// field total num of steps
+B_total_steps := Ceil((B_end-B_start)/B_step_size)+1
+
+// define some variables here. Note these are all floats
+B_current := 0.0
+B_current_mT := 0.0
+t0 := 0.0
+
+// sim time per step in s
+sim_run_time_per_step := B_step_size / B_sweep_rate
+const_field_run_time := sim_run_time_per_step
+
+// set autosaves	
+// in 0.1 mT step. typical: 0.01ns
+tableautosave_time := 1e-5/Abs(B_sweep_rate)
+tableautosave(tableautosave_time)
+
+// print values to check
+prt_str := sprintf("==> B_total_steps: %f",B_total_steps)
+print(prt_str)
+prt_str = sprintf("==> sim_run_time_per_step: %e", sim_run_time_per_step)
+print(prt_str)
+
+// Big loop
+for ind := 0; ind < B_total_steps; ind++ {
+		
+	
+	// initial stablisation run at constant field
+	B_current = B_start + B_step_size*ind
+	B_ext = vector(0,0,B_current)
+	
+	// print values to check
+	prt_str = sprintf("==> B_current: %f. Running const_field_run_time",B_current)
+	print(prt_str)	
+	
+	Run(const_field_run_time)
+	
+	// output mag	
+	B_current_mT = B_current*1e3
+	
+	saveas(m, sprintf("%04d_full_mag_%.0fmT", ind, B_current_mT) )
+
+	
+	// sweep to next field
+	t0 = t
+	B_ext = vector(0, 0, B_current + B_sweep_rate*(t-t0))
+	
+	// print values to check
+	prt_str = sprintf("==> B_current: %f. Sweeping to next field value",B_current + B_sweep_rate*(t-t0))
+	print(prt_str)	
+	
+	Run(sim_run_time_per_step)
+}
+
+
+

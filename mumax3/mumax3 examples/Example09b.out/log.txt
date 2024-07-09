@@ -1,0 +1,55 @@
+//mumax 3.10 [windows_amd64 go1.11.6(gc) CUDA-11.0]
+//GPU info: NVIDIA GeForce RTX 3050 6GB Laptop GPU(6143MB), CUDA Driver 12.5, cc=8.6, using cc=80 PTX
+//(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
+//This is free software without any warranty. See license.txt
+//********************************************************************//
+//  If you use mumax in any work or publication,                      //
+//  we kindly ask you to cite the references in references.bib        //
+//********************************************************************//
+//output directory: .\Example09b.out/
+Aex_val := 6e-12
+Msat_val := 0.5e6
+Ku1_val := 142920
+Dbulk_val := 0
+Dind_val := 1e-3
+alpha_val := 0.1
+Aex.SetRegion(0, Aex_val)
+Msat.SetRegion(0, Msat_val)
+Ku1.SetRegion(0, Ku1_val*5)
+AnisU.SetRegion(0, vector(0, 0, 1))
+Dbulk.SetRegion(0, Dbulk_val)
+Dind.SetRegion(0, Dind_val)
+alpha.SetRegion(0, alpha_val)
+Aex.SetRegion(1, Aex_val)
+Msat.SetRegion(1, Msat_val)
+Ku1.SetRegion(1, Ku1_val)
+AnisU.SetRegion(1, vector(0, 0, 1))
+Dbulk.SetRegion(1, Dbulk_val)
+Dind.SetRegion(1, Dind_val)
+alpha.SetRegion(1, alpha_val)
+num_layers := 2
+SetGridsize(256, 256, num_layers)
+SetCellsize(4e-9, 4e-9, 4e-9)
+for layer_number := 0; layer_number < num_layers; layer_number += 1 {
+	defRegion(Mod(layer_number+1, 2), layer(layer_number))
+}
+ext_scaleExchange(0, 1, 0.1)
+B_ext = vector(0, 0, 0)
+Temp = 0.0
+SetSolver(5)
+m = Uniform(0, 0, 1)
+sk_transl_pos := -400e-9
+sk_delta := 150e-9
+for i := 0; i < 5; i++ {
+	m.setInShape(cylinder(50e-9, inf).transl(sk_transl_pos+sk_delta*i, 0, 0), NeelSkyrmion(1, -1).scale(1, 1, 1).transl(sk_transl_pos+sk_delta*i, 0, 0))
+}
+RunWhile(MaxTorque > 1e-3)
+for layer_number := 0; layer_number < num_layers; layer_number += 1 {
+	Snapshot(CropLayer(m, layer_number))
+}
+//********************************************************************//
+//Please cite the following references, relevant for your simulation. //
+//See bibtex file in output folder for justification.                 //
+//********************************************************************//
+//   * Vansteenkiste et al., AIP Adv. 4, 107133 (2014).
+//   * Mulkers et al., Phys. Rev. B 95, 144401 (2017).
