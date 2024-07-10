@@ -30,6 +30,6 @@ def process_image(input_path, output_path):
     plt.show()
 
 # Example usage
-input_image_path = r'C:\Users\jsche\Documents\GitHub\sup-spin\mumax3\Stray field resources\stray_field_v2.out\m_75mT_layer1.tif'
-output_image_path = r'C:\Users\jsche\Documents\GitHub\sup-spin\mumax3\Stray field resources\stray_field_v2.out\m_75mT_layer1_outline'
+input_image_path = r'C:\Users\jsche\Documents\GitHub\sup-spin\mumax3\Stray field resources\stray_field_v5_singleSK_B_ext.out\m_0mT_layer1.tif'
+output_image_path = r'C:\Users\jsche\Documents\GitHub\sup-spin\mumax3\Stray field resources\stray_field_v5_singleSK_B_ext.out\m_0mT_layer1_outline'
 process_image(input_image_path, output_image_path)

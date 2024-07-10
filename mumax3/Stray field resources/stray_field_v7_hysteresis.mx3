@@ -17,17 +17,17 @@ Region_sk_1 := 3
 
 // constants
 mu_0:=4*pi*1e-7
-// trying to make the skyrmion stable at 0 field
+
 // Sk Stack
-Aex_raw_sk := 12e-12                              // Exchange in J/m
-Msat_raw_sk := 1e6                               //Saturation magnetisation in A/m
-Keff_raw_sk := 1.5e5                                // PMA in J/m^3
+Aex_raw_sk := 12.0e-12                              // Exchange in J/m
+Msat_raw_sk := 1.0e6                               //Saturation magnetisation in A/m
+Keff_raw_sk := 0                                // PMA in J/m^3
 Ku1_raw_sk:=Keff_raw_sk+(mu_0/2)*Msat_raw_sk*Msat_raw_sk // Uniaxial Anisotropy in J/m^3
 Dbulk_raw_sk := 0                                   //Bulk DMI in J/m^2
-Dind_raw_sk := 1.1e-3                             //Interfacial DMI in J/m^2
-alpha_sk:=0.5
+Dind_raw_sk := 2e-3         //0.4e-3                     //Interfacial DMI in J/m^2
+alpha_sk:=0.05
 tFM_sk:=1.0e-9  //Fe&Co thickness
-tHM_sk:=3.0e-9  //both Ir and Pt thickness add tgt
+tHM_sk:=2.0e-9  //both Ir and Pt thickness add tgt
 eff_med_scaling_sk:=tFM_sk/(tFM_sk+tHM_sk)  // factor for effective medium approx for skyrmion layer
 
 // Regions of scaled material parameters for CoB (FM) -> skyrmion layer
@@ -36,7 +36,7 @@ Msat_scaled_sk := Msat_raw_sk*eff_med_scaling_sk                          //3.33
 Keff_scaled_sk := Keff_raw_sk*eff_med_scaling_sk                         //0e4
 Ku1_scaled_sk := Keff_scaled_sk+(mu_0/2)*Msat_scaled_sk*Msat_scaled_sk //2.0944e5
 Dbulk_scaled_sk := Dbulk_raw_sk*eff_med_scaling_sk                      //0
-Dind_scaled_sk := Dind_raw_sk*eff_med_scaling_sk                        //.4e-3
+Dind_scaled_sk := Dind_raw_sk*eff_med_scaling_sk                        //0.6
 print(sprintf("==> Msat_scaled_sk: %f, Keff_scaled_sk: %f, Ku1_scaled_sk: %f",Msat_scaled_sk,Keff_scaled_sk,Ku1_scaled_sk))
 Msat.SetRegion(0, 0) 
 
@@ -63,7 +63,7 @@ SetPBC(2,2,0)
 SetGridsize(num_x_cells,num_x_cells,num_total_layers)
 cellsizex:=2.0e-9
 cellsizey:=2.0e-9
-cellsizez:=4.0e-9
+cellsizez:=3.0e-9
 SetCellsize(cellsizex, cellsizey, cellsizez)
 tmp_region_num := 0
 tmp_layer_num := 0
@@ -89,7 +89,7 @@ scaleExchange_sk := J_val_Sk*cellsizez/(2*Aex_scaled_sk)
 ext_scaleExchange(Region_sk_0, Region_sk_1, scaleExchange_sk)   //between sk repeats
 
 // choose max error and solver
-MaxErr = 1e-5
+MaxErr = 1e-4
 SetSolver(6) 
 
 // quantities to save
@@ -109,9 +109,9 @@ ind_start := 0
 filename := ""
 
 // B field
-B_0 := 0
+B_0 := 0.075
 // set external field and temp
-Temp = 0
+Temp = 850
 B_ext=vector(0,0,B_0)
 
 
@@ -120,11 +120,9 @@ prt_str := sprintf("==> Current field: %f",B_0)
 print(prt_str)
 
 
-// insert skyrmion
-m.setInShape(cylinder(50e-9, inf).transl(0,0,0), NeelSkyrmion(1,-1).scale(1,1,1).transl(0,0,0))
-Snapshot(m)
-RunWhile(MaxTorque!=0)
-Snapshot(m)
+
+RunWhile(MaxTorque>1e-2)
+
 // output mag	
 B_current_mT = B_0*1e3
 filename = sprintf("m_%.0fmT", B_current_mT)
