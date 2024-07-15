@@ -117,7 +117,7 @@ num_field_steps := 5
 // print values to check
 
 m = Uniform(0,0,1)
-B_current = 0.025
+B_current = 0.050
 prt_str := sprintf("==> Current field: %f",B_current)
 print(prt_str)
 B_current_mT = B_current * 1e3 // for file saving purposes
@@ -127,9 +127,3 @@ Run(10e-9)
 
 
 
-
-// output mag	
-B_current_mT = B_current*1e3
-filename = sprintf("m_%.0fmT", B_current_mT)
-saveas(m, filename)
-saveas(B_demag, sprintf("B_demag_%.0fmT", B_current_mT))
