@@ -124,3 +124,6 @@ B_current_mT = B_current * 1e3 // for file saving purposes
 Temp = 750
 B_ext = vector(0,0,B_current)
 Run(10e-9)
+
+
+
