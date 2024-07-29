@@ -19,14 +19,14 @@ Region_sk_1 := 3
 mu_0:=4*pi*1e-7
 
 // Sk Stack
-Aex_raw_sk := 11e-12                              // Exchange in J/m
-Msat_raw_sk := 1.0e6                               //Saturation magnetisation in A/m
+Aex_raw_sk := 13.6e-12                              // Exchange in J/m
+Msat_raw_sk := 1.06e6                               //Saturation magnetisation in A/m
 Keff_raw_sk := 0e6                                // PMA in J/m^3
 Ku1_raw_sk:=Keff_raw_sk+(mu_0/2)*Msat_raw_sk*Msat_raw_sk // Uniaxial Anisotropy in J/m^3 
 Dbulk_raw_sk := 0                                   //Bulk DMI in J/m^2
-Dind_raw_sk := 2.0e-3         //0.4e-3                     //Interfacial DMI in J/m^2
+Dind_raw_sk := 2.1e-3         //0.4e-3                     //Interfacial DMI in J/m^2
 alpha_sk:=0.05
-tFM_sk:=1e-9  //Fe&Co thickness
+tFM_sk:=1.0e-9  //Fe&Co thickness
 tHM_sk:=2.0e-9  //both Ir and Pt thickness add tgt
 eff_med_scaling_sk:=tFM_sk/(tFM_sk+tHM_sk)  // factor for effective medium approx for skyrmion layer
 
@@ -117,7 +117,7 @@ num_field_steps := 5
 // print values to check
 
 m = Uniform(0,0,1)
-B_current = 0.150
+B_current = 0.05
 prt_str := sprintf("==> Current field: %f",B_current)
 print(prt_str)
 B_current_mT = B_current * 1e3 // for file saving purposes
