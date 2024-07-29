@@ -5,9 +5,9 @@
 // Repeat: Repetition of a certain stack structure. E.g. [Ir/Fe/Co/Pt]5 is a stack with 5 repeats
 // Layer: A single cell in z. Same usage as in mumax.
 // Stack structure
-num_sk_repeats := 7  //number of physical repeats for skyrmion layer 
+num_sk_repeats := 14  //number of physical repeats for skyrmion layer 
 num_sk_layers_per_repeat := 1 
-num_x_cells := 512
+num_x_cells := 256
 num_sk_layers := num_sk_repeats*num_sk_layers_per_repeat
 num_total_layers := num_sk_layers + 5
 
@@ -19,14 +19,14 @@ Region_sk_1 := 3
 mu_0:=4*pi*1e-7
 
 // Sk Stack
-Aex_raw_sk := 11e-12                              // Exchange in J/m
-Msat_raw_sk := 1.0e6                               //Saturation magnetisation in A/m
-Keff_raw_sk := 0e6                                // PMA in J/m^3
+Aex_raw_sk := 13.6e-12                              // Exchange in J/m
+Msat_raw_sk := 1.06e6                               //Saturation magnetisation in A/m
+Keff_raw_sk := 0.0e6                                // PMA in J/m^3
 Ku1_raw_sk:=Keff_raw_sk+(mu_0/2)*Msat_raw_sk*Msat_raw_sk // Uniaxial Anisotropy in J/m^3 
 Dbulk_raw_sk := 0                                   //Bulk DMI in J/m^2
-Dind_raw_sk := 2.0e-3         //0.4e-3                     //Interfacial DMI in J/m^2
+Dind_raw_sk := 2.1e-3         //0.4e-3                     //Interfacial DMI in J/m^2
 alpha_sk:=0.05
-tFM_sk:=1e-9  //Fe&Co thickness
+tFM_sk:=1.0e-9  //Fe&Co thickness
 tHM_sk:=2.0e-9  //both Ir and Pt thickness add tgt
 eff_med_scaling_sk:=tFM_sk/(tFM_sk+tHM_sk)  // factor for effective medium approx for skyrmion layer
 
@@ -81,7 +81,7 @@ for i:=0;i<num_sk_repeats;i+=1{ //Essentially sets each region to have all the s
 
 // set interlayer exchange coupling
 //Sk (IEC-B)
-mu0HRKKY_Sk:= 0.2 // in T
+mu0HRKKY_Sk:= 0.1 // in T
 J_val_Sk := mu0HRKKY_Sk*tFM_sk*Msat_raw_sk  // 0.1 * 0.8e-9 * 1e6 = 8e-5
 scaleExchange_sk := J_val_Sk*cellsizez/(2*Aex_scaled_sk) // 8e-5 * 2.8e-9 /(12e-12) = 1.8 e-2
 
@@ -117,16 +117,14 @@ num_field_steps := 5
 // print values to check
 
 m = Uniform(0,0,1)
-B_current = 0.150
+B_current = 0.050
 prt_str := sprintf("==> Current field: %f",B_current)
 print(prt_str)
 B_current_mT = B_current * 1e3 // for file saving purposes
 Temp = 750
 B_ext = vector(0,0,B_current)
-Run(10e-9)
-
-
-
-
+Run(1e-9)
+Temp = 10
+Run(2e-9)
 // output mag	
 
